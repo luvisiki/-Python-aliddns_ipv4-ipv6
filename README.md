@@ -1,5 +1,7 @@
 # Python实现阿里云域名DDNS支持ipv4和ipv6
 
+Platform: Windows
+
 需要安装的库：
 ```
 pip install aliyun-python-sdk-core-v3
