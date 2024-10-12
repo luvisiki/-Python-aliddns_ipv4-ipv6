@@ -6,17 +6,31 @@ from aliyunsdkalidns.request.v20150109.DescribeDomainRecordsRequest import Descr
 import requests
 from urllib.request import urlopen
 import json
+import os
+import re
 
-ipv4_flag = 1  # 是否开启ipv4 ddns解析,1为开启，0为关闭
+ipv4_flag = 0  # 是否开启ipv4 ddns解析,1为开启，0为关闭
 ipv6_flag = 1  # 是否开启ipv6 ddns解析,1为开启，0为关闭
 accessKeyId = "accessKeyId"  # 将accessKeyId改成自己的accessKeyId
 accessSecret = "accessSecret"  # 将accessSecret改成自己的accessSecret
-domain = "zeruns.tech"  # 你的主域名
-name_ipv4 = "blog"  # 要进行ipv4 ddns解析的子域名
-name_ipv6 = "ipv6.test"  # 要进行ipv6 ddns解析的子域名
+domain = "example.com"  # 你的主域名
+name_ipv4 = "example"  # 要进行ipv4 ddns解析的子域名
+name_ipv6 = "example"  # 要进行ipv6 ddns解析的子域名
 
 
 client = AcsClient(accessKeyId, accessSecret, 'cn-hangzhou')
+
+def getIPv6Address(): 
+    """
+    通过命令行以及正则找到第一个ipv6地址(非临时ipv6地址)
+    Returns:
+    匹配到的结果会生成一个list，并取第一个。
+    """
+    output = os.popen("ipconfig /all").read()
+    # print(output)
+    result = re.findall(r"(([a-f0-9]{1,4}:){7}[a-f0-9]{1,4})", output, re.I)
+    return result[0][0]
+
 
 def update(RecordId, RR, Type, Value):  # 修改域名解析记录
     from aliyunsdkalidns.request.v20150109.UpdateDomainRecordRequest import UpdateDomainRecordRequest
@@ -84,8 +98,13 @@ if ipv6_flag == 1:
     response = client.do_action_with_exception(request)  # 获取域名解析记录列表
     domain_list = json.loads(response)  # 将返回的JSON数据转化为Python能识别的
 
-    ip = urlopen('https://api-ipv6.ip.sb/ip').read()  # 使用IP.SB的接口获取ipv6地址
-    ipv6 = str(ip, encoding='utf-8')
+    # 使用接口获得的ipv6地址经过实验返回值为临时地址，此处修改
+    # ip = urlopen('https://api-ipv6.ip.sb/ip').read()  # 使用IP.SB的接口获取ipv6地址
+    # ipv6 = str(ip, encoding='utf-8')
+
+    # 通过命令获得ipv6地址
+    ip = getIPv6Address()
+    ipv6 = ip
     print("获取到IPv6地址：%s" % ipv6)
 
     if domain_list['TotalCount'] == 0:
